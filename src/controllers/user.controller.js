@@ -39,57 +39,41 @@ const generateAccessTokenAndRefreshTokens = async (userId) => {
 //send coookie
 
 const registerUser = asyncHandler(async (req, res) => {
-    const { fullName, email, username, password } = req.body
-    console.log("email :", email);
+    const { fullName, email, username, password } = req.body;
 
-    if (
-        [fullName, email, password, username].some(field => field?.trim() === "")
-    ) {
-
-        throw new ApiError(400, "All fields are required")
-    }
-    const existedUser = await User.findOne({
-        $or: [{ username }, { email }]
-    })
-    if (existedUser) {
-        throw new ApiError(409, "User with email  or username already Exist")
-    }
-    const avatarLocalPath = req.files?.avatar[0]?.path
-    const coverImageLocalPath = req.files?.coverImage[0]?.path;
-
-    if (!avatarLocalPath) {
-        throw new ApiError(400, "Avatar file is required")
+    if ([fullName, email, username, password].some(field => !field?.trim())) {
+        throw new ApiError(400, "All fields are required");
     }
 
-    const avatar = await uploadOnCloudinary(avatarLocalPath)
-    const coverImage = await uploadOnCloudinary(coverImageLocalPath)
+    const existedUser = await User.findOne({ $or: [{ username }, { email }] });
+    if (existedUser) throw new ApiError(409, "User already exists");
 
-    if (!avatar) {
-        throw new ApiError(400, "Avatar file is required")
-    }
+    // GET AVATAR PATH
+    const avatarLocalPath = req.files?.avatar?.[0]?.path;
+    if (!avatarLocalPath) throw new ApiError(400, "Avatar file is required");
 
+    // CREATE LOCAL URL (NO CLOUDINARY)
+    const avatarUrl = `http://localhost:8000/temp/${req.files.avatar[0].filename}`;
+    const coverImageUrl = req.files?.coverImage?.[0]?.filename
+        ? `http://localhost:8000/temp/${req.files.coverImage[0].filename}`
+        : "";
+
+    // SAVE USER
     const user = await User.create({
         fullName,
-        avatar: avatar.url,
-        coverImage: coverImage?.url || "",
         email,
+        username: username.toLowerCase(),
         password,
-        username: username.toLowerCase()
-    })
+        avatar: avatarUrl,
+        coverImage: coverImageUrl
+    });
 
-    const createdUser = await User.findById(user._id).select(
-        "-password -refreshToken"
-
-    )
-    if (!createdUser) {
-        throw ApiError(500, " something went wrong while registering the user ")
-    }
+    const createdUser = await User.findById(user._id).select("-password -refreshToken");
 
     return res.status(201).json(
-        new ApiResponse(200, createdUser, "User registered successfully")
-    )
-})
-
+        new ApiResponse(201, createdUser, "User registered successfully!")
+    );
+});
 const loginUser = asyncHandler(async (req, res) => {
     const { email, username, password } = req.body
     if (!username || !email) {
@@ -277,74 +261,80 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
 
     return res.status(200)
         .json(new ApiResponse(200, user, "Cover Image changed Successfully"))
-})
-
+});
 const getUserChannelProfile = asyncHandler(async (req, res) => {
-    const { username } = req.params
-    if (!username?.trim()) {
-        throw new ApiError(400, "username is missing")
-    }
+    console.log("=== DEBUG INFO ===");
+    console.log("1. req.user (from JWT):", req.user);
+    console.log("2. All users in database:", await User.find({}));
+    console.log("3. Total users count:", await User.countDocuments());
+    console.log("==================");
 
-    const channel = await User.aggregate([
-        {
-            $match: {
-                username: username?.toLowerCase()
-            }
-        }, {
+    return res.status(200).json({
+        success: true,
+        message: "DEBUG: Check your terminal!",
+        yourJwtUser: req.user,
+        allUsersInDB: await User.find({}),
+        totalUsers: await User.countDocuments()
+    });
+});
 
-            $lookup: {
-                from: "subscriptions",
-                localfield: "_id",
-                foreignField: "channel",
-                as: "subscribers"
-            }
+// const getUserChannelProfile = asyncHandler(async (req, res) => {
+//     const username = req.params.username || req.user?.username;
 
-        }, {
-            $lookup: {
-                from: "subscriptions",
-                localfield: "_id",
-                foreignField: "subscriber",
-                as: "subscribedTo"
-            }
-        }, {
-            $addFields: {
-                subscriberCount: {
-                    $size: "$subscribers"
-                },
-                channelsSubscribedToCount: {
-                    $size: "$subscribedTo"
-                },
-                isSubscribed: {
-                    $cond: {
-                        if: { $in: [req.user?._id, "$subscribers.subscriber"] },
-                        then: true,
-                        else: false
-                    }
-                }
-            }
-        },
-        {
-            $project: {
-                fullName: 1,
-                username: 1,
-                subscriberCount: 1,
-                channelsSubscribedToCount: 1,
-                isSubscribed: 1,
-                avatar: 1,
-                coverImage: 1,
-                email: 1
-            }
-        }
+//     console.log("Requested username:", username);
 
-    ])
-    if (!channel?.length) {
-        throw new ApiError(404, "channel does not exist")
-    }
-    return res
-        .status(200)
-        .json(new ApiResponse(200, Channel[0], "User channel fetched successfully"))
-})
+//     if (!username?.trim()) {
+//         throw new ApiError(400, "username is missing")
+//     }
 
+//     // TRY EVERY POSSIBLE COLLECTION NAME
+//     const possibleNames = ["subscriptions", "subscription", "Subscriptions", "Subscription"];
+//     let channel = null;
+
+//     for (const collectionName of possibleNames) {
+//         channel = await User.aggregate([
+//             { $match: { username: username.toLowerCase() } },
+//             {
+//                 $lookup: {
+//                     from: collectionName,
+//                     localField: "_id",
+//                     foreignField: "channel",
+//                     as: "subscribers"
+//                 }
+//             },
+//             {
+//                 $lookup: {
+//                     from: collectionName,
+//                     localField: "_id",
+//                     foreignField: "subscriber",
+//                     as: "subscribedTo"
+//                 }
+//             },
+//             { $limit: 1 }
+//         ]);
+
+//         if (channel && channel.length > 0) {
+//             console.log("SUCCESS with collection:", collectionName);
+//             break;
+//         }
+//     }
+
+//     console.log("Final result:", channel);
+
+//     if (!channel || channel.length === 0) {
+//         throw new ApiError(404, "Channel does not exist");
+//     }
+
+//     // Add counts safely
+//     const result = {
+//         ...channel[0],
+//         subscribersCount: channel[0].subscribers?.length || 0,
+//         channelsSubscribedToCount: channel[0].subscribedTo?.length || 0,
+//         isSubscribed: req.user?._id ? channel[0].subscribers?.some(s => s.subscriber.toString() === req.user._id.toString()) : false
+//     };
+
+//     return res.status(200).json(new ApiResponse(200, result, "Channel fetched"));
+// });
 const getWatchHistory = asyncHandler(async (req, res) => {
     const user = await User.aggregate([
         {
@@ -355,7 +345,7 @@ const getWatchHistory = asyncHandler(async (req, res) => {
         {
             $lookup: {
                 from: "videos",
-                localfield: "watchHistory",
+                localField: "watchHistory",
                 foreignField: "_id",
                 as: "watchHistory",
                 pipeline: [

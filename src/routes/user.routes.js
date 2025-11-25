@@ -1,4 +1,7 @@
 import { Router } from "express";
+import { upload } from "../middlewares/multer.middleware.js";        // ← ADD THIS
+import { verifyJWT } from "../middlewares/auth.middleware.js";
+
 import {
     loginUser,
     logoutUser,
@@ -11,47 +14,38 @@ import {
     updateUserCoverImage,
     getUserChannelProfile,
     getWatchHistory
-}
-    from "../controllers/user.controller.js";
-import { verifyJWT } from "../middlewares/auth.middleware";
+} from "../controllers/user.controller.js";
 
-const router = Router()
+const router = Router();
 
-router.route("/register").post(upload.fields([
-    {
-        name: "avatar",
-        maxCount: 1
-    },
-    {
-        name: "coverImage",
-        maxCount: 1
-    }
-
-]),
+// Register → with avatar + coverImage upload
+router.route("/register").post(
+    upload.fields([
+        { name: "avatar", maxCount: 1 },
+        { name: "coverImage", maxCount: 1 }
+    ]),
     registerUser
-)
+);
 
-router.route("/login").post(loginUser)
+router.route("/login").post(loginUser);
 
-//secured  routes
+// Secured routes
+router.route("/logout").post(verifyJWT, logoutUser);                    // ← fixed typo
+router.route("/refresh-token").post(refreshAccessToken);
+router.route("/change-password").post(verifyJWT, changeCurrentPassword);
+router.route("/current-user").get(verifyJWT, getCurrentUser);
+router.route("/update-account").patch(verifyJWT, updatedAccountDetails);
 
-router.route("/logut").post(verifyJWT, logoutUser)
+router.route("/avatar").patch(verifyJWT, upload.single("avatar"), updateUserAvatar);
 
-router.route("/refresh-token").post(refreshAccessToken)
+router.route("/cover-image").patch(verifyJWT, upload.single("coverImage"), updateUserCoverImage); // ← fixed path
 
-router.route("/change-password").post(verifyJWT, changeCurrentPassword)
+// Optional username → /c = own channel, /c/johndoe = other's channel
+// 1. Get own channel → /api/v1/users/c
+// REMOVE verifyJWT JUST FOR TESTING
+router.route("/c").get(getUserChannelProfile);
+router.route("/c/:username").get(getUserChannelProfile);
 
-router.route("/current-user").get(verifyJWT, getCurrentUser)
+router.route("/history").get(verifyJWT, getWatchHistory);              // better name than watch-History
 
-router.route("/update-account").patch(verifyJWT, updatedAccountDetails)
-
-router.route("/avatar").patch(verifyJWT, upload.single(avatar),
-    updateUserAvatar)
-
-router.route("cover-image").patch(verifyJWT, upload.single("/coverImage"), updateUserCoverImage)
-
-router.route("/c/:username").get(verifyJWT, getUserChannelProfile)
-
-router.route("/watch-History").get(verifyJWT, getWatchHistory)
-
-export default router 
+export default router;
