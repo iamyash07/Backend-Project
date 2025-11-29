@@ -42,8 +42,8 @@ const getAllVideos = asyncHandler(async (req, res) => {
     
     const totalVideos = await Video.countDocuments(filter)
     
-    return res.status(200).json(
-        new ApiResponse(200, {
+    return res.status(201).json(
+        new ApiResponse(201, {
             videos: populatedVideos,
             pagination: {
                 totalVideos,
@@ -126,8 +126,8 @@ const getVideoById = asyncHandler(async (req, res) => {
         owner: owner
     }
     
-    return res.status(200).json(
-        new ApiResponse(200, videoWithOwner, "Video fetched successfully")
+    return res.status(201).json(
+        new ApiResponse(201, videoWithOwner, "Video fetched successfully")
     )
 })
 
@@ -174,8 +174,8 @@ const updateVideo = asyncHandler(async (req, res) => {
         owner: owner
     }
     
-    return res.status(200).json(
-        new ApiResponse(200, videoWithOwner, "Video updated successfully")
+    return res.status(201).json(
+        new ApiResponse(201, videoWithOwner, "Video updated successfully")
     )
 })
 
@@ -198,8 +198,8 @@ const deleteVideo = asyncHandler(async (req, res) => {
     
     await Video.findByIdAndDelete(videoId)
     
-    return res.status(200).json(
-        new ApiResponse(200, {}, "Video deleted successfully")
+    return res.status(201).json(
+        new ApiResponse(201, {}, "Video deleted successfully")
     )
 })
 
@@ -230,8 +230,8 @@ const togglePublishStatus = asyncHandler(async (req, res) => {
         owner: owner
     }
     
-    return res.status(200).json(
-        new ApiResponse(200, videoWithOwner, "Video publish status toggled successfully")
+    return res.status(201).json(
+        new ApiResponse(201, videoWithOwner, "Video publish status toggled successfully")
     )
 })
 
