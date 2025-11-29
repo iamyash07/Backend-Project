@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { upload } from "../middlewares/multer.middleware.js";        // ← ADD THIS
+import { upload } from "../middlewares/multer.middleware.js";        
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 
 import {
@@ -18,7 +18,6 @@ import {
 
 const router = Router();
 
-// Register → with avatar + coverImage upload
 router.route("/register").post(
     upload.fields([
         { name: "avatar", maxCount: 1 },
@@ -30,7 +29,7 @@ router.route("/register").post(
 router.route("/login").post(loginUser);
 
 // Secured routes
-router.route("/logout").post(verifyJWT, logoutUser);                    // ← fixed typo
+router.route("/logout").post(verifyJWT, logoutUser);                    
 router.route("/refresh-token").post(refreshAccessToken);
 router.route("/change-password").post(verifyJWT, changeCurrentPassword);
 router.route("/current-user").get(verifyJWT, getCurrentUser);
@@ -38,14 +37,14 @@ router.route("/update-account").patch(verifyJWT, updatedAccountDetails);
 
 router.route("/avatar").patch(verifyJWT, upload.single("avatar"), updateUserAvatar);
 
-router.route("/cover-image").patch(verifyJWT, upload.single("coverImage"), updateUserCoverImage); // ← fixed path
+router.route("/cover-image").patch(verifyJWT, upload.single("coverImage"), updateUserCoverImage); 
 
 // Optional username → /c = own channel, /c/johndoe = other's channel
 // 1. Get own channel → /api/v1/users/c
-// REMOVE verifyJWT JUST FOR TESTING
+
 router.route("/c").get(getUserChannelProfile);
 router.route("/c/:username").get(getUserChannelProfile);
 
-router.route("/history").get(verifyJWT, getWatchHistory);              // better name than watch-History
+router.route("/history").get(verifyJWT, getWatchHistory);             
 
 export default router;

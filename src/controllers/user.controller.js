@@ -266,79 +266,79 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
     return res.status(200)
         .json(new ApiResponse(200, user, "Cover Image changed Successfully"))
 });
-const getUserChannelProfile = asyncHandler(async (req, res) => {
-    console.log("=== DEBUG INFO ===");
-    console.log("1. req.user (from JWT):", req.user);
-    console.log("2. All users in database:", await User.find({}));
-    console.log("3. Total users count:", await User.countDocuments());
-    console.log("==================");
-
-    return res.status(200).json({
-        success: true,
-        message: "DEBUG: Check your terminal!",
-        yourJwtUser: req.user,
-        allUsersInDB: await User.find({}),
-        totalUsers: await User.countDocuments()
-    });
-});
-
 // const getUserChannelProfile = asyncHandler(async (req, res) => {
-//     const username = req.params.username || req.user?.username;
+//     console.log("=== DEBUG INFO ===");
+//     console.log("1. req.user (from JWT):", req.user);
+//     console.log("2. All users in database:", await User.find({}));
+//     console.log("3. Total users count:", await User.countDocuments());
+//     console.log("==================");
 
-//     console.log("Requested username:", username);
-
-//     if (!username?.trim()) {
-//         throw new ApiError(400, "username is missing")
-//     }
-
-//     // TRY EVERY POSSIBLE COLLECTION NAME
-//     const possibleNames = ["subscriptions", "subscription", "Subscriptions", "Subscription"];
-//     let channel = null;
-
-//     for (const collectionName of possibleNames) {
-//         channel = await User.aggregate([
-//             { $match: { username: username.toLowerCase() } },
-//             {
-//                 $lookup: {
-//                     from: collectionName,
-//                     localField: "_id",
-//                     foreignField: "channel",
-//                     as: "subscribers"
-//                 }
-//             },
-//             {
-//                 $lookup: {
-//                     from: collectionName,
-//                     localField: "_id",
-//                     foreignField: "subscriber",
-//                     as: "subscribedTo"
-//                 }
-//             },
-//             { $limit: 1 }
-//         ]);
-
-//         if (channel && channel.length > 0) {
-//             console.log("SUCCESS with collection:", collectionName);
-//             break;
-//         }
-//     }
-
-//     console.log("Final result:", channel);
-
-//     if (!channel || channel.length === 0) {
-//         throw new ApiError(404, "Channel does not exist");
-//     }
-
-//     // Add counts safely
-//     const result = {
-//         ...channel[0],
-//         subscribersCount: channel[0].subscribers?.length || 0,
-//         channelsSubscribedToCount: channel[0].subscribedTo?.length || 0,
-//         isSubscribed: req.user?._id ? channel[0].subscribers?.some(s => s.subscriber.toString() === req.user._id.toString()) : false
-//     };
-
-//     return res.status(200).json(new ApiResponse(200, result, "Channel fetched"));
+//     return res.status(200).json({
+//         success: true,
+//         message: "DEBUG: Check your terminal!",
+//         yourJwtUser: req.user,
+//         allUsersInDB: await User.find({}),
+//         totalUsers: await User.countDocuments()
+//     });
 // });
+
+const getUserChannelProfile = asyncHandler(async (req, res) => {
+    const username = req.params.username || req.user?.username;
+
+    console.log("Requested username:", username);
+
+    if (!username?.trim()) {
+        throw new ApiError(400, "username is missing")
+    }
+
+    // TRY EVERY POSSIBLE COLLECTION NAME
+    const possibleNames = ["subscriptions", "subscription", "Subscriptions", "Subscription"];
+    let channel = null;
+
+    for (const collectionName of possibleNames) {
+        channel = await User.aggregate([
+            { $match: { username: username.toLowerCase() } },
+            {
+                $lookup: {
+                    from: collectionName,
+                    localField: "_id",
+                    foreignField: "channel",
+                    as: "subscribers"
+                }
+            },
+            {
+                $lookup: {
+                    from: collectionName,
+                    localField: "_id",
+                    foreignField: "subscriber",
+                    as: "subscribedTo"
+                }
+            },
+            { $limit: 1 }
+        ]);
+
+        if (channel && channel.length > 0) {
+            console.log("SUCCESS with collection:", collectionName);
+            break;
+        }
+    }
+
+    console.log("Final result:", channel);
+
+    if (!channel || channel.length === 0) {
+        throw new ApiError(404, "Channel does not exist");
+    }
+
+    // Add counts safely
+    const result = {
+        ...channel[0],
+        subscribersCount: channel[0].subscribers?.length || 0,
+        channelsSubscribedToCount: channel[0].subscribedTo?.length || 0,
+        isSubscribed: req.user?._id ? channel[0].subscribers?.some(s => s.subscriber.toString() === req.user._id.toString()) : false
+    };
+
+    return res.status(200).json(new ApiResponse(200, result, "Channel fetched"));
+});
 const getWatchHistory = asyncHandler(async (req, res) => {
     const user = await User.aggregate([
         {
