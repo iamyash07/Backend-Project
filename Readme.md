@@ -1,4 +1,5 @@
-# chai aur backend series
+# This is backend series 
 
 
-This is video series on bacend with javascript
+This is video series on backend 
+with javascript
