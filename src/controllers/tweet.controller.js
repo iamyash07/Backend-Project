@@ -8,7 +8,7 @@ import { application } from "express"
 import { populate } from "dotenv"
 
 const createTweet = asyncHandler(async (req, res) => {
-    //TODO: create tweet
+    
  const {content} = req.body 
  if(!content?.trim()){
     throw new ApiError(400, "Tweet content required")
@@ -67,7 +67,7 @@ const getUserTweets = asyncHandler(async (req, res) => {
 })
 
 const updateTweet = asyncHandler(async (req, res) => {
-    //TODO: update twee
+   
     const {tweetId} = req.params
     const {content} = req.body
     if(!isValidObjectId(tweetId)){
@@ -92,11 +92,11 @@ tweetId,
         select:"fullName username avatar"
      })
      return res.status(200)
-     .json(new ApiResponse(200, populate, "Tweet updated successfully"))
+     .json(new ApiResponse(200, updatedTweet, "Tweet updated successfully"))
 })
 
 const deleteTweet = asyncHandler(async (req, res) => {
-    //TODO: delete tweet
+    
     if (!isValidObjectId(tweetId)) {
         throw new ApiError(400, "Invalid tweet ID")
     }

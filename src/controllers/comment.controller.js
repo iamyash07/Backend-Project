@@ -5,7 +5,7 @@ import { ApiResponse } from "../utils/ApiResponse.js"
 import { asyncHandler } from "../utils/asyncHandler.js"
 
 const getVideoComments = asyncHandler(async (req, res) => {
-    //TODO: get all comments for a video
+  
     const { videoId } = req.params
     const { page = 1, limit = 10 } = req.query
 
@@ -78,7 +78,7 @@ const getVideoComments = asyncHandler(async (req, res) => {
 })
 
 const addComment = asyncHandler(async (req, res) => {
-    // TODO: add a comment to a video
+  
     const { content } = req.body
     const { videoId } = req.params
     const userId = req.user?._id
@@ -126,7 +126,7 @@ const addComment = asyncHandler(async (req, res) => {
 })
 
 const updateComment = asyncHandler(async (req, res) => {
-    // TODO: update a comment
+  
     const { commentId } = req.params
     const { content } = req.body
     const userId = req.user?._id
@@ -135,27 +135,26 @@ const updateComment = asyncHandler(async (req, res) => {
         throw new ApiError(400, "comment content  is required and connot be empty ")
     }
 
-    //validate commentId format
 
     const validCommentId = mongoose.Types.ObjectId(videoId)
     if (!validCommentId) {
         throw new ApiError(400, "Invalid video ID")
     }
 
-    // Find the comment to verify existence and owbership 
+  
     const comment = await Comment.findById(commentId)
 
     if (!comment) {
         throw new ApiError(404, " comment not found")
     }
 
-    //Verify that the user is the owner of the comment 
+ 
 
     if (!comment.owner.equal(userId)) {
         throw new ApiError(403, "Unauthorized  to update  this comment")
     }
 
-    // Update  the comment with the new content 
+ 
 
     const updateComment = await Comment.findByIdAndUpdate(
         commentId,
@@ -166,8 +165,8 @@ const updateComment = asyncHandler(async (req, res) => {
             }
         },
         {
-            new: true, // Return the  updated document 
-            runValidators: true // Run schema validators
+            new: true, 
+            runValidators: true 
         }
     )
 
@@ -175,7 +174,6 @@ const updateComment = asyncHandler(async (req, res) => {
         throw new ApiError(500, "Failed to update comment ")
     }
 
-    // Populate the owner details to return complete comment information
 
     const populatedComment = await comment.aggregate([
         {
@@ -209,7 +207,7 @@ const updateComment = asyncHandler(async (req, res) => {
 })
 
 const deleteComment = asyncHandler(async (req, res) => {
-    // TODO: delete a comment
+ 
     const { commentId } = req.params
     const userId = req.user?._id
 

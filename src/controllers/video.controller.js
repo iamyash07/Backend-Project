@@ -5,6 +5,8 @@ import { ApiError } from "../utils/ApiError.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
 import { asyncHandler } from "../utils/asyncHandler.js"
 import { uploadOnCloudinary } from "../utils/cloudinary.js"
+import { Like } from "../models/like.model.js";
+
 
 const getAllVideos = asyncHandler(async (req, res) => {
     const { page = 1, limit = 10, query, sortBy = "createdAt", sortType = "desc", userId } = req.query
@@ -35,7 +37,7 @@ const getAllVideos = asyncHandler(async (req, res) => {
         .skip((page - 1) * limit)
         .limit(parseInt(limit))
     
-    // Explicitly populate owner information using User model reference
+    //  populate owner information using User model reference
     const populatedVideos = await Video.populate(videos, [
         { path: "owner", select: "fullName username avatar" }
     ])
@@ -56,27 +58,30 @@ const getAllVideos = asyncHandler(async (req, res) => {
 })
 
 const publishAVideo = asyncHandler(async (req, res) => {
-    const { title, description } = req.body
-    
+    const { title, description } = req.body;
+
     if (!title?.trim()) {
-        throw new ApiError(400, "Video title is required")
+        throw new ApiError(400, "Video title is required");
     }
-    
+
     if (!description?.trim()) {
-        throw new ApiError(400, "Video description is required")
+        throw new ApiError(400, "Video description is required");
     }
-    
-    if (!req.files?.video) {
-        throw new ApiError(400, "Video file is required")
+
+    // FIXED: use req.file since upload.single("video") is used
+    const videoFile = req.file;
+    if (!videoFile) {
+        throw new ApiError(400, "Video file is required");
     }
-    
-    const videoFile = req.files.video[0]
-    const videoUploadResult = await uploadOnCloudinary(videoFile.path)
-    
+
+    // Upload the file to Cloudinary
+    const videoUploadResult = await uploadOnCloudinary(videoFile.path);
+
     if (!videoUploadResult?.url) {
-        throw new ApiError(400, "Error while uploading video")
+        throw new ApiError(400, "Error while uploading video");
     }
-    
+
+    // Create video in database
     const video = await Video.create({
         title: title.trim(),
         description: description.trim(),
@@ -90,46 +95,68 @@ const publishAVideo = asyncHandler(async (req, res) => {
             url: videoUploadResult.thumbnails?.[0]?.url || ""
         },
         owner: new mongoose.Types.ObjectId(req.user?._id)
-    })
-    
-    // Explicitly fetch owner details using User model
-    const owner = await User.findById(req.user?._id).select("fullName username avatar")
-    
+    });
+
+    // Fetch owner details
+    const owner = await User.findById(req.user?._id).select("fullName username avatar");
+
     const populatedVideo = {
         ...video.toObject(),
         owner: owner
-    }
-    
+    };
+
     return res.status(201).json(
         new ApiResponse(201, populatedVideo, "Video uploaded successfully")
-    )
-})
+    );
+});
+
 
 const getVideoById = asyncHandler(async (req, res) => {
-    const { videoId } = req.params
-    
+    const { videoId } = req.params;
+
     if (!isValidObjectId(videoId)) {
-        throw new ApiError(400, "Invalid video ID")
+        throw new ApiError(400, "Invalid video ID");
     }
-    
-    const video = await Video.findById(videoId)
-    
+
+    const video = await Video.findById(videoId);
+
     if (!video) {
-        throw new ApiError(404, "Video not found")
+        throw new ApiError(404, "Video not found");
     }
-    
-    // Explicitly fetch owner details using User model instead of populate
-    const owner = await User.findById(video.owner).select("fullName username avatar")
-    
-    const videoWithOwner = {
+
+    // Fetch owner
+    const owner = await User.findById(video.owner).select("fullName username avatar");
+
+    // ------------ LIKE SYSTEM ------------
+    // Count total likes for the video
+    const likesCount = await Like.countDocuments({
+        video: videoId,
+        type: "Video"
+    });
+
+    // Check if current user already liked
+    let isLiked = false;
+    if (req.user?._id) {
+        const existingLike = await Like.findOne({
+            video: videoId,
+            likedBy: req.user._id,
+            type: "Video"
+        });
+        isLiked = !!existingLike;
+    }
+
+    const videoWithExtras = {
         ...video.toObject(),
-        owner: owner
-    }
-    
-    return res.status(201).json(
-        new ApiResponse(201, videoWithOwner, "Video fetched successfully")
-    )
-})
+        owner,
+        likesCount,
+        isLiked,
+    };
+
+    return res.status(200).json(
+        new ApiResponse(200, videoWithExtras, "Video fetched successfully")
+    );
+});
+
 
 const updateVideo = asyncHandler(async (req, res) => {
     const { videoId } = req.params
@@ -167,7 +194,7 @@ const updateVideo = asyncHandler(async (req, res) => {
         { new: true }
     )
     
-    // Explicitly fetch updated owner details
+    // fetch updated owner details
     const owner = await User.findById(updatedVideo.owner).select("fullName username avatar")
     const videoWithOwner = {
         ...updatedVideo.toObject(),
@@ -223,7 +250,7 @@ const togglePublishStatus = asyncHandler(async (req, res) => {
     video.isPublished = !video.isPublished
     await video.save()
     
-    // Explicitly fetch owner details for the response
+    // fetch owner details for the response
     const owner = await User.findById(video.owner).select("fullName username avatar")
     const videoWithOwner = {
         ...video.toObject(),
@@ -234,6 +261,33 @@ const togglePublishStatus = asyncHandler(async (req, res) => {
         new ApiResponse(201, videoWithOwner, "Video publish status toggled successfully")
     )
 })
+const streamVideo = asyncHandler(async (req, res) => {
+  const { videoId } = req.params;
+
+  if (!isValidObjectId(videoId)) {
+    throw new ApiError(400, "Invalid video ID");
+  }
+
+  const video = await Video.findById(videoId);
+
+  if (!video) {
+    throw new ApiError(404, "Video not found");
+  }
+
+  // increment views
+  video.views = (video.views || 0) + 1;
+  await video.save({ validateBeforeSave: false });
+
+  const cloudUrl = video.videoFile?.url;
+
+  if (!cloudUrl) {
+    throw new ApiError(400, "Video URL not available");
+  }
+
+  return res.redirect(cloudUrl);
+});
+
+
 
 export {
     getAllVideos,
@@ -241,5 +295,6 @@ export {
     getVideoById,
     updateVideo,
     deleteVideo,
-    togglePublishStatus
+    togglePublishStatus,
+    streamVideo
 }

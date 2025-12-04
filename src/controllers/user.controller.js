@@ -113,7 +113,7 @@ const loginUser = asyncHandler(async (req, res) => {
         }, "User logged in successfully"));
 });
 
-// ==================== LOGOUT & OTHER ROUTES (ALL WORKING) ====================
+// ==================== LOGOUT  ====================
 const logoutUser = asyncHandler(async (req, res) => {
     await User.findByIdAndUpdate(req.user._id, { $unset: { refreshToken: 1 } }, { new: true });
     const options = { httpOnly: true, secure: true, sameSite: "None" };

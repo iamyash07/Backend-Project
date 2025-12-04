@@ -7,7 +7,8 @@ import {
     getVideoById,
     updateVideo,
     deleteVideo,
-    togglePublishStatus
+    togglePublishStatus,
+    streamVideo
 } from "../controllers/video.controller.js";
 
 const router = Router();
@@ -20,5 +21,7 @@ router.route("/:id").patch(verifyJWT, updateVideo)
 router.route("/:id").delete(verifyJWT, deleteVideo);
 
 router.route("/:id/toggle-publish-status").patch(verifyJWT, togglePublishStatus);
+
+router.get("/:id/stream", streamVideo);
 
 export default router;

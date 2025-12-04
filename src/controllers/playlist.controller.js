@@ -8,7 +8,7 @@ import {asyncHandler} from "../utils/asyncHandler.js"
 const createPlaylist = asyncHandler(async (req, res) => {
     const {name, description} = req.body
 
-    //TODO: create playlist
+    
 
     if(!name?.trim()){
         throw new ApiError(400, " Playlist name is required")
@@ -55,7 +55,7 @@ const createPlaylist = asyncHandler(async (req, res) => {
 
 const getUserPlaylists = asyncHandler(async (req, res) => {
     const {userId} = req.params
-    //TODO: get user playlists
+
 if (!isValidObjectId(userId)) {
         throw new ApiError(400, "Invalid user ID")
     }
@@ -101,7 +101,7 @@ if (!isValidObjectId(userId)) {
 
 const getPlaylistById = asyncHandler(async (req, res) => {
     const {playlistId} = req.params
-    //TODO: get playlist by id
+    
 if (!isValidObjectId(playlistId)) {
         throw new ApiError(400, "Invalid playlist ID")
     }
@@ -221,7 +221,7 @@ const addVideoToPlaylist = asyncHandler(async (req, res) => {
 
 const removeVideoFromPlaylist = asyncHandler(async (req, res) => {
     const {playlistId, videoId} = req.params
-    // TODO: remove video from playlist
+    
     if (!mongoose.Types.ObjectId.isValid(playlistId) || !mongoose.Types.ObjectId.isValid(videoId)) {
         throw new ApiError(400, "Invalid playlist ID or video ID")
     }
@@ -256,7 +256,7 @@ const removeVideoFromPlaylist = asyncHandler(async (req, res) => {
 
 const deletePlaylist = asyncHandler(async (req, res) => {
     const {playlistId} = req.params
-    // TODO: delete playlist
+    
     if (!mongoose.Types.ObjectId.isValid(playlistId)) {
         throw new ApiError(400, "Invalid playlist ID")
     }
@@ -281,7 +281,7 @@ const deletePlaylist = asyncHandler(async (req, res) => {
 const updatePlaylist = asyncHandler(async (req, res) => {
     const {playlistId} = req.params
     const {name, description} = req.body
-    //TODO: update playlist
+   
     if (!name?.trim()) {
         throw new ApiError(400, "Playlist name is required")
     }
