@@ -39,8 +39,8 @@ const registerUser = asyncHandler(async (req, res) => {
     console.log("REQ FILES:", req.files);
 
     const avatarLocalPath = req?.files?.avatar?.[0]?.path;
-    console.log("Avatar Local Path:", avatarLocalPath);
-    console.log("File Exists:", avatarLocalPath ? fs.existsSync(avatarLocalPath) : false);
+    // console.log("Avatar Local Path:", avatarLocalPath);
+    // console.log("File Exists:", avatarLocalPath ? fs.existsSync(avatarLocalPath) : false);
 
     if (!avatarLocalPath) throw new ApiError(400, "Avatar file is required");
 
@@ -69,7 +69,7 @@ const registerUser = asyncHandler(async (req, res) => {
     const createdUser = await User.findById(user._id).select("-password -refreshToken");
 
     return res.status(201).json(
-        new ApiResponse(201, createdUser, "User registered successfully")
+        new ApiResponse(201, "User registered successfully")
     );
 });
 

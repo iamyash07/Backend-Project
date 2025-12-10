@@ -27,10 +27,10 @@ connectDB()
     const PORT = process.env.PORT || 5050;
 
     // 🔥 FIX: FORCE IPV4 ONLY
-    const server = app.listen(PORT, "127.0.0.1", () => {
-      console.log("🔥 LISTEN CALLBACK FIRED — SERVER IS REALLY LISTENING!");
-      console.log(`🚀 Running at http://127.0.0.1:${PORT}`);
-    });
+   const server = app.listen(PORT, "0.0.0.0", () => {
+  console.log(`Running at http://localhost:${PORT}`);
+});
+
 
     server.on("error", (err) => {
       console.log("🔥 SERVER LISTEN ERROR:", err);

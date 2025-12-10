@@ -261,31 +261,43 @@ const togglePublishStatus = asyncHandler(async (req, res) => {
         new ApiResponse(201, videoWithOwner, "Video publish status toggled successfully")
     )
 })
-const streamVideo = asyncHandler(async (req, res) => {
-  const { videoId } = req.params;
+import https from "https";
 
-  if (!isValidObjectId(videoId)) {
+const streamVideo = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  if (!isValidObjectId(id)) {
     throw new ApiError(400, "Invalid video ID");
   }
 
-  const video = await Video.findById(videoId);
-
+  const video = await Video.findById(id);
   if (!video) {
     throw new ApiError(404, "Video not found");
   }
 
-  // increment views
-  video.views = (video.views || 0) + 1;
-  await video.save({ validateBeforeSave: false });
-
-  const cloudUrl = video.videoFile?.url;
-
-  if (!cloudUrl) {
+  const videoUrl = video.videoFile?.url;
+  if (!videoUrl) {
     throw new ApiError(400, "Video URL not available");
   }
 
-  return res.redirect(cloudUrl);
+  const range = req.headers.range;
+  if (!range) {
+    return res.status(400).send("Requires Range header");
+  }
+
+  // Forward request to Cloudinary (to support partial requests)
+  https.get(
+    videoUrl,
+    {
+      headers: { Range: range },
+    },
+    (cloudRes) => {
+      res.writeHead(cloudRes.statusCode, cloudRes.headers);
+      cloudRes.pipe(res);
+    }
+  );
 });
+
 
 
 

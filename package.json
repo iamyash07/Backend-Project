@@ -1,12 +1,12 @@
 {
-  "name": "chai-or-backend",
+  "name": "chai-backend",
   "version": "1.0.0",
-  "description": "a backend at chai or code ",
+  "description": "a backend at chai aur code channel - youtube",
   "type": "module",
-  "main": "src/index.js",
+  "main": "index.js",
   "scripts": {
-    "dev": "nodemon src/index.js",
-    "start": "node src/index.js"
+    "dev": "nodemon src/index.js"
+
   },
   "keywords": [
     "javascript",
