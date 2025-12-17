@@ -68,7 +68,7 @@ const publishAVideo = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Video description is required");
     }
 
-    // FIXED: use req.file since upload.single("video") is used
+    
     const videoFile = req.file;
     if (!videoFile) {
         throw new ApiError(400, "Video file is required");
