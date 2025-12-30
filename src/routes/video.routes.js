@@ -16,12 +16,12 @@ const router = Router();
 router.route("/").get(getAllVideos)
 router.route("/").post(verifyJWT, upload.single("video"), publishAVideo);
 
-router.route("/:id").get(getVideoById)
-router.route("/:id").patch(verifyJWT, updateVideo)
-router.route("/:id").delete(verifyJWT, deleteVideo);
+router.route("/:videoId").get(getVideoById)
+router.route("/:videoId").patch(verifyJWT, updateVideo)
+router.route("/:videoId").delete(verifyJWT, deleteVideo);
 
-router.route("/:id/toggle-publish-status").patch(verifyJWT, togglePublishStatus);
+router.route("/:videoId/toggle-publish-status").patch(verifyJWT, togglePublishStatus);
 
-router.get("/:id/stream", streamVideo);
+router.get("/:videoId/stream", streamVideo);
 
 export default router;

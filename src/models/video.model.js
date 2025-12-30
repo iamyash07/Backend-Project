@@ -47,6 +47,41 @@ const videoSchema = new Schema(
   }
 );
 
+//  virtual properties to flatten nested fields
+videoSchema.virtual('duration').get(function () {
+  return this.videoFile?.duration || 0;
+});
+
+videoSchema.virtual('videoUrl').get(function () {
+  return this.videoFile?.url || '';
+});
+
+videoSchema.virtual('thumbnailUrl').get(function () {
+  return this.thumbnail?.url || '';
+});
+
+// Ensure virtuals are included when converting to JSON/Object
+videoSchema.set('toJSON', {
+  virtuals: true,
+  transform: function (doc, ret) {
+    // Also flatten the nested properties directly for easier access
+    ret.duration = ret.videoFile?.duration || 0;
+    ret.thumbnail = ret.thumbnail?.url || '';
+    ret.videoFile = ret.videoFile?.url || '';
+    return ret;
+  }
+});
+
+videoSchema.set('toObject', {
+  virtuals: true,
+  transform: function (doc, ret) {
+    ret.duration = ret.videoFile?.duration || 0;
+    ret.thumbnail = ret.thumbnail?.url || '';
+    ret.videoFile = ret.videoFile?.url || '';
+    return ret;
+  }
+});
+
 videoSchema.plugin(mongooseAggregatePaginate);
 
 export const Video = mongoose.model("Video", videoSchema);
