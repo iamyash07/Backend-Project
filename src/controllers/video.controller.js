@@ -68,17 +68,15 @@ const publishAVideo = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Video description is required");
     }
 
-
     const videoFile = req.file;
     if (!videoFile) {
         throw new ApiError(400, "Video file is required");
     }
 
-    // Upload the file to Cloudinary
     const videoUploadResult = await uploadOnCloudinary(videoFile.path);
 
     if (!videoUploadResult?.url) {
-        throw new ApiError(400, "Error while uploading video");
+        throw new ApiError(500, "Error while uploading video to Cloudinary");
     }
 
     const thumbnailUrl = videoUploadResult.url.replace(
@@ -86,9 +84,6 @@ const publishAVideo = asyncHandler(async (req, res) => {
         '/upload/so_0,w_400,h_225,c_fill/'
     ).replace(/\.[^.]+$/, '.jpg');
 
-
-
-    // Create video in database
     const video = await Video.create({
         title: title.trim(),
         description: description.trim(),
@@ -99,11 +94,11 @@ const publishAVideo = asyncHandler(async (req, res) => {
             format: videoUploadResult.format
         },
         thumbnail: {
-            url: thumbnailUrl  // Use generated thumbnail URL
+            url: thumbnailUrl
         },
         owner: new mongoose.Types.ObjectId(req.user?._id)
     });
-    // Fetch owner details
+
     const owner = await User.findById(req.user?._id).select("fullName username avatar");
 
     const populatedVideo = {
