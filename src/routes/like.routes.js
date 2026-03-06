@@ -7,10 +7,13 @@ import {
     getLikedVideos
 } from "../controllers/like.controller.js"
 
-const router = Router()
+const router = Router();
 
-router.route("/:commentId").patch(verifyJWT, toggleCommentLike)
-router.route("/:tweetId").patch(verifyJWT, toggleTweetLike)
-router.route("/:videoId").patch(verifyJWT, toggleVideoLike)
-router.route("/my-liked-videos").get(verifyJWT, getLikedVideos)
+router.use(verifyJWT); 
+router.route("/videos").get(getLikedVideos);
+
+router.route("/toggle/c/:commentId").post(toggleCommentLike);
+router.route("/toggle/t/:tweetId").post(toggleTweetLike);
+router.route("/toggle/v/:videoId").post(toggleVideoLike);
+
 export default router;

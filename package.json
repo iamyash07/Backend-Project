@@ -6,7 +6,6 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon src/index.js"
-
   },
   "keywords": [
     "javascript",
@@ -23,7 +22,7 @@
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
-    "express": "^5.1.0",
+    "express": "^4.22.1",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.19.2",
     "mongoose-aggregate-paginate-v2": "^1.1.4",

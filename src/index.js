@@ -24,13 +24,12 @@ connectDB()
   .then(() => {
     console.log("📌 DB connected — now starting server...");
 
-    const PORT = process.env.PORT || 5050;
+    const PORT = process.env.PORT || 8000;
 
-    // 🔥 FIX: FORCE IPV4 ONLY
-   const server = app.listen(PORT, "0.0.0.0", () => {
-  console.log(`Running at http://localhost:${PORT}`);
-});
-
+    // Updated: Listen on '::' for dual IPv4/IPv6 support
+    const server = app.listen(PORT, "::", () => {
+      console.log(`Running at http://localhost:${PORT} (or http://127.0.0.1:${PORT} for IPv4)`);
+    });
 
     server.on("error", (err) => {
       console.log("🔥 SERVER LISTEN ERROR:", err);

@@ -39,9 +39,6 @@ router.route("/avatar").patch(verifyJWT, upload.single("avatar"), updateUserAvat
 
 router.route("/cover-image").patch(verifyJWT, upload.single("coverImage"), updateUserCoverImage); 
 
-// Optional username → /c = own channel, /c/johndoe = other's channel
-// 1. Get own channel → /api/v1/users/c
-
 router.route("/c").get(getUserChannelProfile);
 router.route("/c/:username").get(getUserChannelProfile);
 

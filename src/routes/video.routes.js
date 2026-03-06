@@ -15,8 +15,7 @@ const router = Router();
 
 router.route("/").get(getAllVideos)
 router.route("/").post(verifyJWT, upload.single("video"), publishAVideo);
-
-router.route("/:videoId").get(getVideoById)
+router.route("/:videoId").get(verifyJWT, getVideoById);
 router.route("/:videoId").patch(verifyJWT, updateVideo)
 router.route("/:videoId").delete(verifyJWT, deleteVideo);
 

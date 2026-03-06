@@ -1,3 +1,4 @@
+import https from "https";
 import mongoose, { isValidObjectId } from "mongoose"
 import { Video } from "../models/video.model.js"
 import { User } from "../models/user.model.js"
@@ -125,6 +126,21 @@ const getVideoById = asyncHandler(async (req, res) => {
         throw new ApiError(404, "Video not found");
     }
 
+
+
+
+     if (req.user?._id) {
+        await User.findByIdAndUpdate(
+            req.user._id,
+            {
+                $addToSet: { // $addToSet prevents duplicates
+                    watchHistory: videoId
+                }
+            },
+            { new: true }
+        );
+    }
+    
     // Fetch owner
     const owner = await User.findById(video.owner).select("fullName username avatar");
 
@@ -262,42 +278,25 @@ const togglePublishStatus = asyncHandler(async (req, res) => {
         new ApiResponse(201, videoWithOwner, "Video publish status toggled successfully")
     )
 })
-import https from "https";
 
 const streamVideo = asyncHandler(async (req, res) => {
-    const { id } = req.params;
-
-    if (!isValidObjectId(id)) {
-        throw new ApiError(400, "Invalid video ID");
+    const { videoId } = req.params   
+    if (!isValidObjectId(videoId)) {
+        throw new ApiError(400, "Invalid video ID")
     }
 
-    const video = await Video.findById(id);
+    const video = await Video.findById(videoId)
     if (!video) {
-        throw new ApiError(404, "Video not found");
+        throw new ApiError(404, "Video not found")
     }
 
-    const videoUrl = video.videoFile?.url;
+    const videoUrl = video.videoFile?.url
     if (!videoUrl) {
-        throw new ApiError(400, "Video URL not available");
+        throw new ApiError(400, "Video URL not available")
     }
 
-    const range = req.headers.range;
-    if (!range) {
-        return res.status(400).send("Requires Range header");
-    }
-
-    // Forward request to Cloudinary (to support partial requests)
-    https.get(
-        videoUrl,
-        {
-            headers: { Range: range },
-        },
-        (cloudRes) => {
-            res.writeHead(cloudRes.statusCode, cloudRes.headers);
-            cloudRes.pipe(res);
-        }
-    );
-});
+    return res.redirect(videoUrl)
+})
 
 
 
